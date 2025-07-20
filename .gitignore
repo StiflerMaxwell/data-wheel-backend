@@ -1,0 +1,6 @@
+# 本地环境变量
+.env
+.env.local
+ 
+# Google API 凭证
+gsc-credentials.json 

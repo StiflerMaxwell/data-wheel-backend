@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 洞察测试</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        select {
+            padding: 8px;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        #result {
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+            min-height: 200px;
+        }
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>奢侈品电商数据分析洞察测试</h1>
+    
+    <div>
+        <label for="viewSelect">选择分析视图:</label>
+        <select id="viewSelect">
+            <option value="page_optimization_view">页面优化分析</option>
+            <option value="daily_kpi_summary_view">宏观健康度监控</option>
+            <option value="utm_funnel_performance_view">UTM 渠道漏斗性能</option>
+        </select>
+    </div>
+    
+    <button id="generateBtn">生成洞察</button>
+    <button id="clearBtn">清除结果</button>
+    
+    <div id="result">点击"生成洞察"按钮开始分析...</div>
+
+    <script>
+        const generateBtn = document.getElementById('generateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const viewSelect = document.getElementById('viewSelect');
+        const resultDiv = document.getElementById('result');
+        
+        // Supabase 服务角色密钥 - 注意：这通常不应该在前端代码中暴露
+        const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyZnVya2d6eWxpcXVka2ptY2trIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjgxOTY2NCwiZXhwIjoyMDY4Mzk1NjY0fQ.H7HRi47TGr6r3k9VfK3aPZbt4DBl86GRRXsGyEoFdkQ';
+        
+        generateBtn.addEventListener('click', async () => {
+            const viewName = viewSelect.value;
+            generateBtn.disabled = true;
+            resultDiv.innerHTML = '<span class="loading">正在分析中，请稍候...</span>';
+            
+            try {
+                const response = await fetch('https://rrfurkgzyliqudkjmckk.supabase.co/functions/v1/generate-insight', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${serviceRoleKey}`
+                    },
+                    body: JSON.stringify({ viewName })
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API 错误 (${response.status}): ${errorText}`);
+                }
+                
+                // 处理流式响应
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let result = '';
+                
+                resultDiv.innerHTML = '';
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    result += chunk;
+                    
+                    // 更新 UI
+                    resultDiv.innerHTML = result;
+                    // 自动滚动到底部
+                    window.scrollTo(0, document.body.scrollHeight);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<span style="color: red">错误: ${error.message}</span>`;
+            } finally {
+                generateBtn.disabled = false;
+            }
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            resultDiv.innerHTML = '点击"生成洞察"按钮开始分析...';
+        });
+    </script>
+</body>
+</html> 
